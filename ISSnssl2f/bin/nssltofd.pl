@@ -1,38 +1,27 @@
 #!/usr/bin/env perl
 
-
 package nssl2f;
 
+use strict;
 use diagnostics;
 use warnings;
-use strict;
-use mods::params;
 
-%::config;
-$::configfile = "/opt/ISSnssl2f/etc/nssl2f.conf";
+use modules::log;
+use modules::params;
+use modules::config;
+use modules::nsw::passwd;
+use modules::nsw::group;
+use modules::nsw::shadow;
+use Data::Dumper; 
 
-	Getopt::Long::Configure("bundling");
-	GetOptions(\%::opts,'h','c=s'); 
+$::VERSION = 0.1;
+
+	my $params = modules::params->new();
+	my $log = modules::log->new($params->getLogFilename, $params->getLogLevel, $params->getLogLimit);
+	my $config = modules::config->new($params->getConfigFilename);
 	
-	if (exists $::opts{h}) { printHelp(); exit(0); }
-	if (exists $::opts{c}) { $::configfile = $::opts{c}; }
-	loadConfig();
-	exit(0); 
-	
-sub loadConfig
-{
-	open(my $HANDLER, "< " . $::configfile) or die "Unable to open config file " . $::configfile;
-	while (my $line = <$HANDLER>)
+	foreach my $nsw ($params->getArrayNSWs())
 	{
-		chomp($line);
-		my ($parameter, $value) = split('=', 2);
-		trimWSP($parameter);
-		trimWSP($value);
+		my $nsw = modules::$nsw->new();
 	}
-	close($HANDLER);
-}
-
-sub trimWSP
-{
-	
-}
+	exit(0); 
