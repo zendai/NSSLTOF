@@ -1,27 +1,28 @@
 #!/usr/bin/env perl
+#
+# sendai, 2013.
+#
 
 package nssl2f;
 
 use strict;
 use diagnostics;
 use warnings;
+use FindBin;
+use lib ("$FindBin::Bin", "$FindBin::Bin/modules");
 
 use modules::log;
 use modules::params;
 use modules::config;
-use modules::nsw::passwd;
-use modules::nsw::group;
-use modules::nsw::shadow;
-use Data::Dumper; 
+use modules::service;
 
 $::VERSION = 0.1;
 
-	my $params = modules::params->new();
-	my $log = modules::log->new($params->getLogFilename, $params->getLogLevel, $params->getLogLimit);
-	my $config = modules::config->new($params->getConfigFilename);
+	my $params 	= modules::params->new();
+	my $config 	= modules::config->new($params->getConfigFilename);
+	my $log 	= modules::log->new($config->getLogFilename, $config->getLogLevel, $config->getLogLimit);
 	
-	foreach my $nsw ($params->getArrayNSWs())
-	{
-		my $nsw = modules::$nsw->new();
-	}
+	my $service = modules::service->new($log, $config);
+	$service->run();
+	
 	exit(0); 
