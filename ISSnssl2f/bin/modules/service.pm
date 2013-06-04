@@ -58,7 +58,11 @@ sub run
 	{
 		foreach my $nsw (@{$self->{nsw}})
 		{
-			$nsw->loadLDAP();
+			if ($nsw->loadLDAP()ne "SUCCESS")
+			{
+				$l->msg("Error while loading objects from LDAP, skipping files update", "low");
+				next;
+			}
 			$nsw->saveFILES();
 		}
 		$l->msg("Sleeping..", "high");

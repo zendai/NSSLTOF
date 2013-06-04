@@ -29,14 +29,20 @@ sub loadLDAP
 {
 	my $self = shift;
 	
-	$self->{"log"}->msg("Loading " . BACKEND . " objects from LDAP", "high");
-	$self->{class}->SUPER::loadLDAP($self, BACKEND);
+	my $l = $self->{"log"};
+	$l->msg("Loading " . BACKEND . " objects from LDAP", "low");
+	my $status = $self->{class}->SUPER::loadLDAP($self, BACKEND);
+	$l->msg("Loaded " . @{$self->{nsw}} . " objects", "low");
+	
+	return($status);
 }
 
 sub saveFILES
 {
 	my $self = shift;
-	$self->{"log"}->msg("Saving " . BACKEND . " objects into files", "high");
+	
+	my $l = $self->{"log"};
+	$l->msg("Saving " . BACKEND . " objects into files", "low");
 
 	my @files;
 	
@@ -45,10 +51,14 @@ sub saveFILES
 		push(@files, $self->{class}->SUPER::extractAttributes(\@ftol, \%{$record}));
 	}
 	
-	print "FILES\n";
-	use Data::Dumper;
-	print Dumper(\@files);
+	open(my $HANDLER, ">" . GROUP_CACHE) or die "Unable to open cache file " . GROUP_CACHE;
+	foreach my $line (@files)
+	{
+		printf($HANDLER "%s\n", $line);
+	}
+	close($HANDLER);
 	
+	$l->msg("Saved " . @files . " lines", "low");
 }
 
 1;

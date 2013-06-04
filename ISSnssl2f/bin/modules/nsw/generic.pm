@@ -3,25 +3,19 @@ package nsw::generic;
 
 use strict;
 use warnings;
-use constant LDAP_FILE_CRED => "/var/ldap/ldap_client_file2";
+use constant LDAP_FILE_CRED => "/var/ldap/ldap_client_file";
 
 sub loadLDAP
 {
-	use Data::Dumper;
-	print Dumper(\@_);
-	
 	my $class = shift;
 	my $self = shift;
 	my ($database) = @_;
-	
-	print "LOADLDAP\n";
-	exit;
 	
 	my $l = $self->{"log"};
 	my $cmd = "ldaplist -lv " . $database;
 	$l->msg("Executing command $cmd", "high");
 	
-	open(my $HANDLER, $cmd . "|") or die "Unable to run ldaplist";
+	open(my $HANDLER, $cmd . " 2>/dev/null |") or die "Unable to run ldaplist";
 	
 	my %record;
 	undef(@{ $self->{nsw}});
@@ -51,7 +45,14 @@ sub loadLDAP
 		push( @{$self->{nsw}}, {%record});
 	}
 	
-	close($HANDLER);
+	my $status = close($HANDLER);
+	
+	if (! $status)
+	{
+		$l->msg("WARNING: command failed to run, error code " . $?, "low");
+		return("ERROR");
+	}
+	return("SUCCESS");
 }
 
 sub customAttributeMaps
@@ -74,7 +75,7 @@ sub customAttributeMaps
 	{
 		if (exists $customMaps{$attr})
 		{
-			$l->msg("Rewrite $attr to customMaps{$attr}", "high");
+			$l->msg("Rewrite $attr to $customMaps{$attr}", "high");
 			$attr = $customMaps{$attr};
 		}
 	}

@@ -12,6 +12,7 @@ sub new
 	bless $self, $class;
 	
 	($self->{filename}, $self->{loglevel}, $self->{limit}) = @_;
+	$self->msg("Log subsystem initalized, nssl2f started.", "low");
 	
 	return $self;
 }
