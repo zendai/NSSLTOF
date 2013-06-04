@@ -65,8 +65,9 @@ sub run
 			}
 			$nsw->saveFILES();
 		}
-		$l->msg("Sleeping..", "high");
-		sleep 1;
+		my $randomWindow = int(rand($self->{config}->getRandomWindow()));
+		$l->msg("Sleeping " . $self->{config}->getSleepTime() . " + " . $randomWindow . " seconds", "high");
+		sleep ($self->{config}->getSleepTime() + $randomWindow);
 	}
 }
 

@@ -99,6 +99,29 @@ sub getLogLimit
 	return($self->{config}{"Log.LimitSize"});
 }
 
+sub getRandomWindow
+{
+	my $self = shift;
+	
+	if (! exists $self->{config}{"RefreshPeriod.RandomWindow"})
+	{
+		return(30);
+	}
+	return($self->{config}{"RefreshPeriod.RandomWindow"});
+}
+
+sub getSleepTime
+{
+	my $self = shift;
+	
+	if (!exists $self->{config}{"RefreshPeriod.Sleep"})
+	{
+		return(60);
+	}
+	return($self->{config}{"RefreshPeriod.Sleep"});
+	
+}
+
 sub getArrayNSWs
 {
 	my $self = shift;

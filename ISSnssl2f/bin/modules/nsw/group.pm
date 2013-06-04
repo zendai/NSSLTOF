@@ -34,7 +34,7 @@ sub loadLDAP
 	my $status = $self->{class}->SUPER::loadLDAP($self, BACKEND);
 	$l->msg("Loaded " . @{$self->{nsw}} . " objects", "low");
 	
-	if (($status eq "SUCCESS") and (@{$self->{nsw}} == 0) and ($self->{config}->skipZeroUpdates())
+	if (($status eq "SUCCESS") and (@{$self->{nsw}} == 0) and ($self->{config}->skipZeroUpdates()))
 	{
 		$l->msg("Zero update protection turned on, skipping updates", "low");
 		$status = "SKIP";
