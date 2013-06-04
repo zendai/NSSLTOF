@@ -23,6 +23,8 @@ sub loadLDAP
 	my %record;
 	if ($fullupdate) { 
 		undef(@{ $self->{nsw}});
+	} else{
+		undef($self->{incstats});
 	}
 	
 	while (my $line = <$HANDLER>)
@@ -31,17 +33,6 @@ sub loadLDAP
 		if ($line =~ /^dn:/)
 		{
 			$self->commitRecord(\%record, $fullupdate);
-#			if (keys(%record) != 0)
-#			{
-#				if ($fullupdate)
-#				{
-#					push( @{$self->{nsw}}, {%record });
-#				} else
-#				{
-#					updateEntry();
-#				}
-				
-#			}
 			undef(%record);
 		}
 		if ($line !~ /^.*[^\s]+:.*[^\s]+\s*$/)
@@ -54,16 +45,11 @@ sub loadLDAP
 	}
 	
 	$self->commitRecord(\%record, $fullupdate);
-#	if (keys(%record) != 0)
-#	{
-#		if ($fullupdate)
-#		{
-#			push( @{$self->{nsw}}, {%record});
-#		} else
-#		{
-#			updateEntry();
-#		}
-#	}
+	
+	if (! $fullupdate)
+	{
+		$l->msg("Incremental stats: $self->{incstats}{deleted} deleted $self->{incstats}{added} added", "low");
+	}
 	
 	my $status = close($HANDLER);
 	
@@ -118,19 +104,16 @@ sub updateEntry
 				push(@{$self->{nswtemp}}, {%{$cursor}});
 			} else
 			{
-				$self->{stats}{"deleted"}++;
+				$self->{incstats}{"deleted"}++;
 			}
 		}
 	}
 	
+	$self->{incstats}{"added"}++;
 	push(@{$self->{nswtemp}}, {%{$record}});
 	
 	$self->{nsw} = $self->{nswtemp};
 	undef($self->{nswtemp});
-	
-	use Data::Dumper;
-	print Dumper(\$self);
-	exit;
 }
 
 sub buildLdaplistCommand
@@ -179,7 +162,7 @@ sub getLDAPTimestamp
 	# If we wouldn't do that and localtime would be ahead of LDAP's localtime, that would punch a hole in the incremental update logic
 	
 	my $ltime = (time - (3600 * 24));
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(0);
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($ltime);
 	my $ldaptstamp = sprintf("%.4d%.2d%.2d%.2d%.2d%.2dZ", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 		
 	return($ldaptstamp);
