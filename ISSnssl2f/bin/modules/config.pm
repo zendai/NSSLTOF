@@ -122,6 +122,18 @@ sub getSleepTime
 	
 }
 
+sub getFullUpdateEveryNth
+{
+	my $self = shift;
+	
+	if (!exists $self->{config}{"RefreshPeriod.EveryNthFullUpdates"})
+	{
+		return(-1);
+	}
+	
+	return($self->{config}{"RefreshPeriod.EveryNthFullUpdates"});
+}
+
 sub getArrayNSWs
 {
 	my $self = shift;

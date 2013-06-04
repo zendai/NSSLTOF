@@ -60,7 +60,7 @@ sub run
 		{
 			if ($nsw->loadLDAP() ne "SUCCESS")
 			{
-				$l->msg("Error while loading objects from LDAP, skipping files update", "low");
+				$l->msg("Error while loading objects from LDAP or zero objects found, skipping files update", "low");
 				next;
 			}
 			$nsw->saveFILES();

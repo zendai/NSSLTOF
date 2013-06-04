@@ -10,15 +10,20 @@ sub loadLDAP
 	my $class = shift;
 	my $self = shift;
 	my ($database) = @_;
+	my $everyNFull = $self->{config}->getFullUpdateEveryNth();
 	
 	my $l = $self->{"log"};
-	my $cmd = "ldaplist -lv " . $database;
+	my $fullupdate = 1;
+	
+	my $cmd = buildLdaplistCommand($l, $everyNFull, $self, $database, \$fullupdate);
 	$l->msg("Executing command $cmd", "high");
 	
 	open(my $HANDLER, $cmd . " 2>/dev/null |") or die "Unable to run ldaplist";
 	
 	my %record;
-	undef(@{ $self->{nsw}});
+	if ($fullupdate) { 
+		undef(@{ $self->{nsw}});
+	}
 	
 	while (my $line = <$HANDLER>)
 	{
@@ -27,7 +32,14 @@ sub loadLDAP
 		{
 			if (keys(%record) != 0)
 			{
-				push( @{$self->{nsw}}, {%record });
+				if ($fullupdate)
+				{
+					push( @{$self->{nsw}}, {%record });
+				} else
+				{
+					updateEntry();
+				}
+				
 			}
 			%record = ();
 		}
@@ -42,17 +54,73 @@ sub loadLDAP
 	
 	if (keys(%record) != 0)
 	{
-		push( @{$self->{nsw}}, {%record});
+		if ($fullupdate)
+		{
+			push( @{$self->{nsw}}, {%record});
+		} else
+		{
+			updateEntry();
+		}
 	}
 	
 	my $status = close($HANDLER);
 	
 	if (! $status)
 	{
-		$l->msg("WARNING: command failed to run, error code " . $?, "low");
+		$l->msg("Command failed to run or object not found, return code " . $?, "low");
 		return("ERROR");
 	}
+	
 	return("SUCCESS");
+}
+
+sub buildLdaplistCommand
+{
+	my ($l, $everyNFull, $self, $database, $fullupdate) = @_;
+	
+	my $cmd;
+	
+	if ($everyNFull == -1)
+	{
+		$l->msg("Running in full update mode", "high");
+		$cmd = "ldaplist -lv " . $database;
+	}
+	
+	if ($everyNFull > -1)
+	{
+		if  (! exists $self->{nsw})
+		{
+			$l->msg("Running in incremental mode, init full update", "high");
+			$cmd = "ldaplist -lv " . $database;
+			$self->{incremental}{"timestamp"} = getLDAPTimestamp();
+			$self->{incremental}{"count"} = 0;
+		} else
+		{
+			if (($everyNFull == 0) or (($self->{incremental}{"count"} % $everyNFull) != 0))
+			{
+				$l->msg("Running in incremental mode, incremental update cycle #" . $self->{incremental}{"count"}, "high");
+				$cmd = sprintf("ldaplist -lv %s \"modifyTimestamp>=%s\"",$database, $self->{incremental}{"timestamp"});
+				$self->{incremental}{"timestamp"} = getLDAPTimestamp();
+				$fullupdate = 0;
+			} else
+			{
+				$l->msg("Running in incremental mode, full update, cycle #" . $self->{incremental}{"count"}, "high");
+				$cmd = "ldaplist -lv " . $database;
+			}
+			$self->{incremental}{"count"}++;
+		}		
+	}
+	return($cmd);
+}
+
+sub getLDAPTimestamp
+{
+	# Rewind the date by 24 hours to cover any possible timezone differences between localtime and LDAP server's localtime
+	# If we wouldn't do that and localtime would be ahead of LDAP's localtime, that would punch a hole in the incremental update logic	
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime((time - (3600 * 24)));
+	my $ldaptstamp = sprintf("%.4d%.2d%.2d%.2d%.2d%.2dZ", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+		
+	return($ldaptstamp);
 }
 
 sub customAttributeMaps
