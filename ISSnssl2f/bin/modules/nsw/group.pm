@@ -17,7 +17,7 @@ sub new
 	my $self = {};
 	bless $self, $class;
 	
-	($self->{"log"}) = @_; 
+	($self->{"log"}, $self->{"config"}) = @_; 
 
 	$self->{class} = $class;
 	$class->SUPER::customAttributeMaps($self, BACKEND, \@ftol);	
@@ -33,6 +33,12 @@ sub loadLDAP
 	$l->msg("Loading " . BACKEND . " objects from LDAP", "low");
 	my $status = $self->{class}->SUPER::loadLDAP($self, BACKEND);
 	$l->msg("Loaded " . @{$self->{nsw}} . " objects", "low");
+	
+	if (($status eq "SUCCESS") and (@{$self->{nsw}} == 0) and ($self->{config}->skipZeroUpdates())
+	{
+		$l->msg("Zero update protection turned on, skipping updates", "low");
+		$status = "SKIP";
+	}
 	
 	return($status);
 }

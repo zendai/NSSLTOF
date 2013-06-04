@@ -35,6 +35,19 @@ sub loadConfig
 	close($HANDLER);
 }
 
+sub skipZeroUpdates
+{
+	my $self = shift;
+	
+	if ((exists $self->{config}{"SkipZeroUpdates"}) and ($self->{config}{"SkipZeroUpdates"} =~ /yes/i))
+	{
+		print "CSACSA\n";
+		return(1);
+	}
+	print "PACSA\n";
+	return(0);
+}
+
 sub trimWSP
 {
 	foreach my $param (@_)
