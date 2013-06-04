@@ -19,8 +19,9 @@ sub new
 	
 	($self->{"log"}, $self->{"config"}) = @_; 
 
+	$self->{uniqueid} = "cn";
 	$self->{class} = $class;
-	$class->SUPER::customAttributeMaps($self, BACKEND, \@ftol);	
+	$class->SUPER::customAttributeMaps($self, BACKEND, \@ftol);
 	
 	return($self);
 }

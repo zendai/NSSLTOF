@@ -15,7 +15,7 @@ sub loadLDAP
 	my $l = $self->{"log"};
 	my $fullupdate = 1;
 	
-	my $cmd = buildLdaplistCommand($l, $everyNFull, $self, $database, \$fullupdate);
+	my $cmd = $self->buildLdaplistCommand($l, $everyNFull, $database, \$fullupdate);
 	$l->msg("Executing command $cmd", "high");
 	
 	open(my $HANDLER, $cmd . " 2>/dev/null |") or die "Unable to run ldaplist";
@@ -30,18 +30,19 @@ sub loadLDAP
 		chomp($line);
 		if ($line =~ /^dn:/)
 		{
-			if (keys(%record) != 0)
-			{
-				if ($fullupdate)
-				{
-					push( @{$self->{nsw}}, {%record });
-				} else
-				{
-					updateEntry();
-				}
+			$self->commitRecord(\%record, $fullupdate);
+#			if (keys(%record) != 0)
+#			{
+#				if ($fullupdate)
+#				{
+#					push( @{$self->{nsw}}, {%record });
+#				} else
+#				{
+#					updateEntry();
+#				}
 				
-			}
-			%record = ();
+#			}
+			undef(%record);
 		}
 		if ($line !~ /^.*[^\s]+:.*[^\s]+\s*$/)
 		{
@@ -52,16 +53,17 @@ sub loadLDAP
 		push (@{$record{$attr}}, $value);
 	}
 	
-	if (keys(%record) != 0)
-	{
-		if ($fullupdate)
-		{
-			push( @{$self->{nsw}}, {%record});
-		} else
-		{
-			updateEntry();
-		}
-	}
+	$self->commitRecord(\%record, $fullupdate);
+#	if (keys(%record) != 0)
+#	{
+#		if ($fullupdate)
+#		{
+#			push( @{$self->{nsw}}, {%record});
+#		} else
+#		{
+#			updateEntry();
+#		}
+#	}
 	
 	my $status = close($HANDLER);
 	
@@ -74,9 +76,67 @@ sub loadLDAP
 	return("SUCCESS");
 }
 
+sub commitRecord
+{
+	my $self = shift;	
+	my ($record, $fullupdate) = @_;
+	
+	my $l = $self->{"log"};
+	
+	if (keys(%{$record}) != 0)
+	{
+		if ($fullupdate)
+		{
+			push( @{$self->{nsw}}, {%{$record} });
+		} else
+		{
+			$self->updateEntry($record);
+		}			
+	}
+}
+
+sub updateEntry
+{
+	my $self = shift;
+	
+	my ($record) = @_;
+	
+	my $i;
+	my $l = $self->{"log"};
+	
+	undef($self->{nswtemp});
+	
+	foreach my $cursor (@{$self->{nsw}})
+	{
+		if (! exists ${$cursor}{$self->{uniqueid}})
+		{
+			$l->msg("ERROR: couldn't find unique ID for incremental update", "low");
+		} else
+		{
+			if (${$cursor}{$self->{uniqueid}}[0] ne ${$record}{$self->{uniqueid}}[0])
+			{
+				push(@{$self->{nswtemp}}, {%{$cursor}});
+			} else
+			{
+				$self->{stats}{"deleted"}++;
+			}
+		}
+	}
+	
+	push(@{$self->{nswtemp}}, {%{$record}});
+	
+	$self->{nsw} = $self->{nswtemp};
+	undef($self->{nswtemp});
+	
+	use Data::Dumper;
+	print Dumper(\$self);
+	exit;
+}
+
 sub buildLdaplistCommand
 {
-	my ($l, $everyNFull, $self, $database, $fullupdate) = @_;
+	my $self = shift;
+	my ($l, $everyNFull, $database, $fullupdate) = @_;
 	
 	my $cmd;
 	
@@ -101,7 +161,7 @@ sub buildLdaplistCommand
 				$l->msg("Running in incremental mode, incremental update cycle #" . $self->{incremental}{"count"}, "high");
 				$cmd = sprintf("ldaplist -lv %s \"modifyTimestamp>=%s\"",$database, $self->{incremental}{"timestamp"});
 				$self->{incremental}{"timestamp"} = getLDAPTimestamp();
-				$fullupdate = 0;
+				$$fullupdate = 0;
 			} else
 			{
 				$l->msg("Running in incremental mode, full update, cycle #" . $self->{incremental}{"count"}, "high");
@@ -116,8 +176,10 @@ sub buildLdaplistCommand
 sub getLDAPTimestamp
 {
 	# Rewind the date by 24 hours to cover any possible timezone differences between localtime and LDAP server's localtime
-	# If we wouldn't do that and localtime would be ahead of LDAP's localtime, that would punch a hole in the incremental update logic	
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime((time - (3600 * 24)));
+	# If we wouldn't do that and localtime would be ahead of LDAP's localtime, that would punch a hole in the incremental update logic
+	
+	my $ltime = (time - (3600 * 24));
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(0);
 	my $ldaptstamp = sprintf("%.4d%.2d%.2d%.2d%.2d%.2dZ", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 		
 	return($ldaptstamp);

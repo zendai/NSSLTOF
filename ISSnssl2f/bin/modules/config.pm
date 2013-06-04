@@ -26,6 +26,7 @@ sub loadConfig
 	
 	while (my $line = <$HANDLER>)
 	{
+		if ($line =~ /^\s*#/) { next; }
 		chomp($line);
 		my ($parameter, $value) = split('=', $line, 2);
 		if (! defined $value) { next; } 
