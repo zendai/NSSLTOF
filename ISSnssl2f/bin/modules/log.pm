@@ -32,7 +32,7 @@ sub msg
 	if ($level2n{$level} <= $level2n{$self->{loglevel}})
 	{
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-		my $ltime = sprintf("%d/%.2d/%.2d %.2d:%.2d:%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+		my $ltime = sprintf("[%d/%.2d/%.2d %.2d:%.2d:%.2d]", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 		my $HANDLER;
 		
 		if ($self->getLogfileSize() >= ($self->{limit} * 1024))

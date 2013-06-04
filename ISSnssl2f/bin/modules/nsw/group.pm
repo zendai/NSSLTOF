@@ -5,6 +5,9 @@ use strict;
 use warnings;
 use base 'nsw::generic';
 
+use constant BACKEND => "group";
+use constant GROUP_CACHE => "/etc/" . BACKEND . ".cache";
+
 my @ftol = ("cn", "userPassword", "gidNumber", "memberUid");
 
 sub new
@@ -15,16 +18,9 @@ sub new
 	bless $self, $class;
 	
 	($self->{"log"}) = @_; 
-	
+
 	$self->{class} = $class;
-	
-	use Data::Dumper;
-	print "BEFORE\n";
-	print Dumper(\@ftol);
-	
-	$class->SUPER::customAttributeMaps("group", \@ftol);
-	print "AFTER\n";
-	print Dumper(\@ftol);
+	$class->SUPER::customAttributeMaps($self, BACKEND, \@ftol);	
 	
 	return($self);
 }
@@ -33,14 +29,25 @@ sub loadLDAP
 {
 	my $self = shift;
 	
-	$self->{"log"}->msg("Loading group objects from LDAP", "high");
-	$self->{class}->SUPER::loadLDAP($self, "group");
+	$self->{"log"}->msg("Loading " . BACKEND . " objects from LDAP", "high");
+	$self->{class}->SUPER::loadLDAP($self, BACKEND);
 }
 
 sub saveFILES
 {
 	my $self = shift;
-	$self->{"log"}->msg("Saving group objects into files", "high");
+	$self->{"log"}->msg("Saving " . BACKEND . " objects into files", "high");
+
+	my @files;
+	
+	foreach my $record (@{$self->{nsw}})
+	{
+		push(@files, $self->{class}->SUPER::extractAttributes(\@ftol, \%{$record}));
+	}
+	
+	print "FILES\n";
+	use Data::Dumper;
+	print Dumper(\@files);
 	
 }
 

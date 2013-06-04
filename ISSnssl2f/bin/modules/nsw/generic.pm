@@ -7,9 +7,15 @@ use constant LDAP_FILE_CRED => "/var/ldap/ldap_client_file2";
 
 sub loadLDAP
 {
+	use Data::Dumper;
+	print Dumper(\@_);
+	
 	my $class = shift;
 	my $self = shift;
 	my ($database) = @_;
+	
+	print "LOADLDAP\n";
+	exit;
 	
 	my $l = $self->{"log"};
 	my $cmd = "ldaplist -lv " . $database;
@@ -51,31 +57,72 @@ sub loadLDAP
 sub customAttributeMaps
 {
 	my $class = shift;
+	my $self = shift;
 	my $database = shift;
 	my $attributes = shift;
 	
-	my %customMaps = loadAttributeMaps($database);
+	my $l = $self->{"log"};
+	
+	my %customMaps;
+	loadAttributeMaps($database, \%customMaps);
+	while (my ($oldattr, $newattr) = each(%customMaps))
+	{
+		$l->msg("Custom attribute found for database $database, $oldattr => $newattr", "high");
+	}
+	
 	foreach my $attr (@{$attributes})
 	{
-		
-		print $attr . "XX\n";
+		if (exists $customMaps{$attr})
+		{
+			$l->msg("Rewrite $attr to customMaps{$attr}", "high");
+			$attr = $customMaps{$attr};
+		}
 	}
-	print "AX\n";
-	use Data::Dumper;
-	print Dumper(\@_);
 }
 
 sub loadAttributeMaps
 {
-	my ($database) = @_;
+	my ($database, $customMaps) = @_;
 	
 	open(my $HANDLER, "<" . LDAP_FILE_CRED) or die "Unable to open " . LDAP_FILE_CRED;
 	while (my $line = <$HANDLER>)
 	{
-		print $line;
 		chomp($line);
+		if ($line !~ /^NS_LDAP_ATTRIBUTEMAP=/)
+		{
+			next;
+		}
+		my $mapdetail = $line;
+		$mapdetail =~ s/^NS_LDAP_ATTRIBUTEMAP=//;
+		if ($mapdetail =~ /^\s+$database:/)
+		{
+			my ($database, $conversion) = split(':', $mapdetail, 2);
+			my ($defattr, $custattr) = split('=', $conversion, 2);
+			
+			$$customMaps{$defattr} = $custattr;
+		}
 	}
 	close($HANDLER);	
+}
+
+sub extractAttributes
+{
+	my $class = shift;
+	my ($attributes, $ldapobject) = @_;
+	
+	my @linedb;
+	
+	foreach my $attribute (@{$attributes})
+	{
+		if (ref($$ldapobject{lc($attribute)}) eq 'ARRAY')
+		{
+			push(@linedb, join(',', @{$$ldapobject{lc($attribute)}}));
+		} else
+		{
+			push(@linedb, "");
+		}
+	}
+	return(join(':',@linedb));
 }
 
 sub trimWSP
