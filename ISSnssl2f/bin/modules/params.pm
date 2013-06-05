@@ -14,6 +14,7 @@ sub new
 	
 	bless $self, $class;
 	
+	umask(0022);
 	$self->initParams();
 			
 	return $self;
