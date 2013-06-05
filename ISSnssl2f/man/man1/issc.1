@@ -1,0 +1,87 @@
+\." Manpage for issc
+\." Author of the nssltof package : sendai <c> 2013.
+.TH issc 1 "05 Jun 2013" "SunOS 5.10" "NSSLTOF package"
+.SH NAME
+issc - NSS 'ldap' to 'files' sync daemon
+.SH SYNOPSIS
+.LP
+nssltofd [-c <filename>] [-svh]
+
+.SH DESCRIPTION
+nssltofd is a daemon which will periodically sync the configured NSS databases (passwd/shadow/group)
+from LDAP using the native LDAP configuration within the OS into local files, which then can be called
+via the 'issc' nsswitch module. This package is part of the NSSLTOF package which is an optional and
+harmless replacement for having 'ldap' in nsswitch.conf.
+
+If you have 'ldap' in nsswitch.conf, your NSS functions depend on the network and on the LDAP server. In
+case you are not satisified with 'ldap' (there can be many reasons why would this happen), you can install
+NSSLTOF package,  run the daemon for continues sync between 'ldap' and the local cache files, then just
+replace the 'ldap' keyword in nsswitch.conf with 'issc', and your NSS will use local cache files instead of
+direct LDAP.
+.SH SECURITY
+.LP
+nssltofd must be run as root, since it will update cache files (/etc/<backend>.cache) and also will read /var/ldap/ldap_client_file for attribute map customization.
+.SH OPTIONS
+.LP
+The following options are supported: 
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-c <config file>\fR\fR
+.sp .6
+.RS 4n
+Specify an alternate config file. Default is to use /opt/ISSnssl2f/etc/nssl2f.conf
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-s\fR\fR
+.ad
+.sp .6
+.RS 4n
+Standalone mode. nssltofd will stay in the foreground. The default is that it will go into background
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-v\fR\fR
+.ad
+.sp .6
+.RS 4n
+Print version and exit
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-h\fR\fR
+.ad
+.sp .6
+.RS 4n
+Print help and exit
+RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fB-v\fR\fR
+.ad
+.sp .6
+.RS 4n
+Print version and exit
+
+.SH SEE ALSO
+issc(1)
+.SH FILES 
+/etc/passwd.cache
+/etc/shadow.cache
+/etc/group.cache
+/var/ldap/ldap_client_file
+/etc/nsswitch.conf

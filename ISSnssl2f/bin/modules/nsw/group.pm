@@ -6,8 +6,9 @@ use warnings;
 use base 'nsw::generic';
 
 use constant BACKEND => "group";
-use constant GROUP_CACHE => "/etc/" . BACKEND . ".cache";
+use constant CACHE_FILE => "/etc/" . BACKEND . ".cache";
 
+# Based on posixGroup RFC 2307
 my @ftol = ("cn", "userPassword", "gidNumber", "memberUid");
 
 sub new
@@ -58,7 +59,7 @@ sub saveFILES
 		push(@files, $self->{class}->SUPER::extractAttributes(\@ftol, \%{$record}));
 	}
 	
-	open(my $HANDLER, ">" . GROUP_CACHE) or die "Unable to open cache file " . GROUP_CACHE;
+	open(my $HANDLER, ">" . CACHE_FILE) or die "Unable to open cache file " . CACHE_FILE;
 	foreach my $line (@files)
 	{
 		printf($HANDLER "%s\n", $line);

@@ -71,7 +71,7 @@ sub commitRecord
 	my $l = $self->{"log"};
 	
 	if (keys(%{$record}) != 0)
-	{
+	{	
 		if ($fullupdate)
 		{
 			push( @{$self->{nsw}}, {%{$record} });
@@ -229,6 +229,11 @@ sub extractAttributes
 	
 	foreach my $attribute (@{$attributes})
 	{
+		if ($attribute =~ /^{CONSTANT}/)
+		{
+			push(@linedb, substr($attribute, 10));
+			next;
+		}
 		if (ref($$ldapobject{lc($attribute)}) eq 'ARRAY')
 		{
 			push(@linedb, join(',', @{$$ldapobject{lc($attribute)}}));
