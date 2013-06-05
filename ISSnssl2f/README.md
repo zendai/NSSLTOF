@@ -25,4 +25,4 @@ As a conclusion I decided to write a NSS 'ldap' to 'files (nssl2f) package in Pe
 
 Any questions or comments, please don't hesitate to contact me,
 
-sendai, 2013.
+sendai, 2013. <andras.spitzer@ge.com>
