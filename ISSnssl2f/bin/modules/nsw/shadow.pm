@@ -3,6 +3,7 @@ package nsw::shadow;
 
 use strict;
 use warnings;
+use base 'nsw::generic';
 
 sub new
 {

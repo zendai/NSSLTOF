@@ -1,25 +1,28 @@
-NSSL2F, The NSSCACHE for Solaris 10+
-------------------------------------
+## NSSL2F, The NSSCACHE for Solaris 10+ ##
 
-This tool was inspired by NSSCACHE [1].
+**NSSL2F** intends to ease the NSS initiated LDAP load on Solaris 10+ hosts by providing two layers (the sync layer and the nss layer) as a replacement. If you ever had to face problems with the 'ldap' module in nsswitch.conf, you may have wondered if there is a chance to cache LDAP results locally on the server.
 
-[1] https://code.google.com/p/nsscache/
+## The motivation ##
 
-NSSCACHE was written in Python, but unfortunately on Solaris 10+ 'bsddb' is not part of the
-base modules so it won't run. Obviously you can compile your own Python, install bsddb 
-module (which required the db package from Oracle), but all the solutions are somewhat painful, 
-mainly because you need a compiler and most likely you can only get gcc, not cc. Also tried to download
-a compiled Python from CSW, it works with the newer Solaris 10s, but not with the elder ones (it will
-fail to run on Solaris updates when inet_aton was not included in the libraries, these are mainly the early 
-versions of Solaris 10).
+Well, that's what NSCD is for you might say, and partly you are correct. In theory NSCD *should* efficiently cache the results from any NSS2 compliant source backend in nsswitch but in real life this is *unfortunately not fully true*, because 
 
-Long story short, I spent a few days trying to make NSSCACHE work on Solaris 10+, without success, I also
-had to consider a solution which can be mass applied to a huge amount of servers, so I decided to write my 
-own version, NSSL2F which is specific to Solaris 10+. This tool is a daemon which periodically syncs (either 
-full or incremental) LDAP objects into files (/etc/<database>.cache), and the package also includes an NSS 
-backend to use those cache files in /etc/nsswitch.conf.
+- NSCD can and eventually will crash
+- probably you have a 3rd party NSS backend which is not NSS2 compatible (like Likewise's 'lsass' module) meaning NSCD will reject caching
+- even if none of the previous ones are affecting you, still there are a few NSS library calls which are simply not cached/supported by NSCD, like _getgroupsbymember().
 
-The NSS backend has to be compiled, but it's very short and simple so I won't expect any incompatibilities
-among different Solaris 10 updates, so you can just compile it on one and copy it to the rest.
+## Inspired by NSSCACHE ##
+
+We are not the first one to realize this issue, Google came to the same conclusion, that's why they came up with [NSSCACHE](https://code.google.com/p/nsscache), unfortunately it is clear that it was written, designed and tested on/for Linux. Even though NSSCACHE's core is written in Python, not even that will run easily on Solaris 10+.
+
+## nssl2f ##
+
+As a conclusion I decided to write a NSS 'ldap' to 'files (nssl2f) package in Perl (the language which is part of core Solaris). There are a few differences between nssl2f and NSSCACHE.
+
+- nssl2f runs as daemon and syncs (full or incremental) periodically, no need for cron or any other scheduler
+- it was designed to work with Solaris 10+, means you don't have to configure LDAP twice (once in the OS once in nssl2f), nssl2f will use the native LDAP OS configuration
+- today it supports *passwd*, *group* and *shadow* databases, but it's easily extendable (just let me know if you want me to)
+
+
+Any questions or comments, please don't hesitate to contact me,
 
 sendai, 2013.
