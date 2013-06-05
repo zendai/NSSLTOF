@@ -22,7 +22,7 @@ $::VERSION = 0.1;
 	my $config 	= modules::config->new($params->getConfigFilename);
 	my $log 	= modules::log->new($config->getLogFilename, $config->getLogLevel, $config->getLogLimit);
 	
-	my $service = modules::service->new($log, $config);
+	my $service = modules::service->new($log, $config, $params);
 	$service->run();
 	
 	exit(0); 

@@ -33,7 +33,7 @@ sub loadLDAP
 	my $l = $self->{"log"};
 	$l->msg("Loading " . BACKEND . " objects from LDAP", "low");
 	my $status = $self->{class}->SUPER::loadLDAP($self, BACKEND);
-	$l->msg("Loaded " . @{$self->{nsw}} . " objects", "low");
+	$l->msg(@{$self->{nsw}} . " objects in buffer", "low");
 	
 	if (($status eq "SUCCESS") and (@{$self->{nsw}} == 0) and ($self->{config}->skipZeroUpdates()))
 	{

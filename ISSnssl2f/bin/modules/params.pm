@@ -24,7 +24,7 @@ sub initParams
 	my $self = shift;
 		
 	Getopt::Long::Configure("bundling");
-	GetOptions('h|help' => \&printHelp,'c|config=s' => \$self->{configfile}, 'v|version' => \&printVersion); 
+	GetOptions('h|help' => \&printHelp,'c|config=s' => \$self->{configfile}, 'v|version' => \&printVersion, 's' => \$self->{nodaemon}); 
 }
 
 sub printVersion
@@ -39,16 +39,30 @@ sub getConfigFilename
 	return($self ->{configfile});
 }
 
+sub startDaemon
+{
+	my $self = shift;
+	
+	if (defined $self->{nodaemon})
+	{
+		return(0);
+	}
+	return(1);
+}
+
 sub printHelp
 {
-	print <<EOHELP
+	print <<EOHELP;
 $0 [-hcv]
 	-h	print help
 	-v	print version
 	-c 	specify configuration file [default: $configfile]
+	-s	standalone mode, don't send process into background
 	
 Any questions or comments please concact sendai (106003902)
 EOHELP
+
+	exit(0);
 }
 
 1;

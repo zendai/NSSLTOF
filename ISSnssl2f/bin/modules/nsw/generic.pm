@@ -24,7 +24,8 @@ sub loadLDAP
 	if ($fullupdate) { 
 		undef(@{ $self->{nsw}});
 	} else{
-		undef($self->{incstats});
+		$self->{incstats}{"deleted"} = 0;
+		$self->{incstats}{"added"} = 0;
 	}
 	
 	while (my $line = <$HANDLER>)
