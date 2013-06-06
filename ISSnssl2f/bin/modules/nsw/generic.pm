@@ -42,7 +42,7 @@ sub loadLDAP
 		}		
 		my ($attr, $value) = split(':', $line, 2);	
 		trimWSP(\$attr, \$value);	
-		push (@{$record{$attr}}, $value);
+		push (@{$record{lc($attr)}}, $value);
 	}
 	
 	$self->commitRecord(\%record, $fullupdate);

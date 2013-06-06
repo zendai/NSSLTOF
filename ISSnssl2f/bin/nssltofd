@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# sendai, 2013.
+# sendai, 2013. <andras.spitzer@ge.com>
 #
 
 package nssl2f;
