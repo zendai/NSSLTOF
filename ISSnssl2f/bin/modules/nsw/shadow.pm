@@ -9,7 +9,7 @@ use constant BACKEND => "shadow";
 use constant CACHE_FILE => "/etc/" . BACKEND . ".cache";
 
 # Based on shadowAccount RFC 2307
-my @ftol = ("uid", "{CONSTANT}*LK*", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}");
+my @ftol = ("uid", "{CONSTANT}NOP", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}", "{CONSTANT}");
 
 sub new
 {
