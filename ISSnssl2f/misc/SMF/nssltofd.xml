@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+	sendai 2013, NSSLTOF package, nssltofd daemon
+-->
+
+<service_bundle type='manifest' name='ISSnssltof:nssltofd'>
+
+<service
+	name='application/iss/nss-ldap-to-files'
+	type='service'
+	version='1'>
+
+	<create_default_instance enabled='false' />
+
+	<single_instance />
+
+	<dependency
+	    name='ldap'
+	    grouping='require_all'
+	    restart_on='none'
+	    type='service'>
+		<service_fmri value='svc:/network/ldap/client:default' />
+	</dependency>
+
+	<dependency
+	    name='config_data'
+	    grouping='require_all'
+	    restart_on='none'
+	    type='path'>
+		<service_fmri
+		    value='file://localhost/var/ldap/ldap_client_file' />
+	</dependency>
+
+	<exec_method
+	    type='method'
+	    name='start'
+	    exec='/opt/ISSnssl2f/bin/nssltofd'
+	    timeout_seconds='120' >
+		<method_context>
+			<method_credential user='root' group='root'
+			    privileges='basic,file_dac_write' />
+		</method_context>
+	</exec_method>
+
+	<exec_method
+	    type='method'
+	    name='stop'
+	    exec=':kill'
+	    timeout_seconds='60' >
+		<method_context>
+			<method_credential user='root' group='root'
+			    privileges='basic' />
+		</method_context>
+	</exec_method>
+
+	<stability value='Unstable' />
+
+	<template>
+		<common_name>
+			<loctext xml:lang='C'>
+				NSS 'ldap' to 'files' cache sync
+			</loctext>
+		</common_name>
+		<description>
+			<loctext xml:lang='C'>
+Daemon to sync 'ldap' NSS objects into local 'files' caches. Part of the NSSLTOF package.
+			</loctext>
+		</description>
+		<documentation>
+			<manpage title='nssltofd' section='1M' manpath='/usr/share/man' />
+		</documentation>
+	</template>
+
+</service>
+
+</service_bundle>
