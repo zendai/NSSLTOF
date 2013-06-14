@@ -1,11 +1,11 @@
-NSS cache module for [NSSCACHE][1], Solaris 10+
-------------------------------------------
+###NSS cache module for NSSLTOF###
 
-[1] https://code.google.com/p/nsscache/
+## Why NSSCACHE won't run on Solaris 10+ ##
 
+This module is part of the NSSLTOF package.
 
-This module is an extension for NSSCACHE. NSSCACHE is a tool to provide
-a clean workaround to the problems around using LDAP as an NSS
+[NSSCACHE](https://code.google.com/p/nsscache) is a tool 
+to provide a clean workaround to the problems around using LDAP as an NSS
 provider, broken NSCD implementations, bugs, core dumps, uncached
 library calls (_getgroupsbymember() for example on Solaris).
 
