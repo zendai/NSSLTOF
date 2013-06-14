@@ -1,8 +1,8 @@
-###NSS cache module for NSSLTOF###
+##NSS cache module for NSSLTOF##
 
-## Why NSSCACHE won't run on Solaris 10+ ##
+### Why NSSCACHE won't run on Solaris 10+ ###
 
-This module is part of the NSSLTOF package.
+This module is part of the **NSSLTOF** package.
 
 [NSSCACHE](https://code.google.com/p/nsscache) is a tool 
 to provide a clean workaround to the problems around using LDAP as an NSS
@@ -20,7 +20,8 @@ On Solaris 10+ the first part works since it is written in Python, so
 you can sync LDAP into local files on Solaris too. The second step
 though is problem with Solaris 10+. Solaris does not have support for
 Bekeley DBs, neither nss-cache compile succesfully. So the base
-NSSCACHE package cant be used on Solaris.
+NSSCACHE package can't be used on Solaris, at least not without a lot
+effort which makes it unfeasible for mass deployment at a large organization.
 
 This package intend to provide a module for the second part, the
 /etc/nsswitch.conf part. If you configure the first part to use
@@ -38,4 +39,4 @@ reject it.
 
 Supported databases : passwd, group, shadow
 
-sendai
+sendai, 2013.
