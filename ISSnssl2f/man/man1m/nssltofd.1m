@@ -1,6 +1,6 @@
 \." Manpage for nssltofd
 \." Author of the nssltof package : sendai <c> 2013.
-.TH nssltof 1M "05 Jun 2013" "SunOS 5.10" "NSSLTOF package"
+.TH nssltofd 1M "05 Jun 2013" "SunOS 5.10" "NSSLTOF package"
 .SH NAME
 nssltofd - NSS 'ldap' to 'files' sync daemon
 .SH SYNOPSIS
@@ -12,6 +12,16 @@ nssltofd is a daemon which will periodically sync the configured NSS databases (
 from LDAP using the native LDAP configuration within the OS into local files, which then can be called
 via the 'issc' nsswitch module. This package is part of the NSSLTOF package which is an optional and
 harmless replacement for having 'ldap' in nsswitch.conf.
+
+NSSLTOF is registered as application/iss/nss-ldap-to-files in the SMF.
+
+Startup :
+
+# svcadm enable application/iss/nss-ldap-to-files
+
+Shutdown :
+
+# svcadm disable application/iss/nss-ldap-to-files
 
 If you have 'ldap' in nsswitch.conf, your NSS functions depend on the network and on the LDAP server. In
 case you are not satisified with 'ldap' (there can be many reasons why would this happen), you can install
@@ -78,10 +88,17 @@ RE
 Print version and exit
 
 .SH SEE ALSO
-issc(1)
+.PP
+\fBissc\fR(1), \fBnssl2f.conf\fR(4)
+.PP
+.ce
+sendai, <andras.spitzer@ge.com>
 .SH FILES 
+/opt/ISSnssl2f/etc/nssl2f.conf
+.br
 /etc/passwd.cache
+.br
 /etc/shadow.cache
+.br
 /etc/group.cache
-/var/ldap/ldap_client_file
-/etc/nsswitch.conf
+.br

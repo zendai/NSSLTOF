@@ -1,0 +1,157 @@
+\." Manpage for nssl2f.conf
+\." Author of the nssltof package : sendai <c> 2013.
+.TH nssl2f.conf 4 "15 Jun 2013" "SunOS 5.10" "NSSLTOF package"
+.SH NAME
+nssl2f.conf - configuration file for nssltofd
+.SH SYNOPSIS
+.LP
+/opt/ISSnssl2f/etc/nssl2f.conf
+
+.SH DESCRIPTION
+This configuration files define various settings for nssltofd, the daemon
+which syncs NSS entries from 'ldap' to local 'files'.
+.SH OPTIONS
+.LP
+The following options are supported: 
+.sp
+.ne 2
+.mk
+.na
+\fB\fBSync.NSW\fR\fR
+.sp .6
+.RS 4n
+
+Comma seprated list of backend databases to sync. Currently supported backends
+are 'passwd', 'shadow', and 'group'. Shadow file is a dummy file which will not
+contain any passwords, since NSSLTOF is an NSS module, not a PAM module.
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fBRefreshPeriod.Sleep\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+How many seconds the daemon should sleep between syncs.
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fBRefreshPeriod.RandomWindow\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+nssltofd will sleep (RefreshPeriod.Sleep + rand(0,RefreshPeriod.RandomWindow))
+seconds between sync. The idea is that if you have a huge amount of server, you don't
+want to have all your servers sync at the same time put an unreasonable peak load on your
+LDAP server, to even this out you can tune this parameter, so the syncs will be spread 
+randomly. This doesn't have to be a huge value, somewhere between 5 - 300 seconds should be
+enough.
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fBRefreshPeriod.EveryNthFullUpdates\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+This will control your sync method. nssltofd is capable of running in either 1. full sync
+2. incremental sync, or 3. both, and this value will control that.
+
+.br
+
+- if this value is not set, nssltofd will run in full update mode
+
+.br
+
+- if this value is 0, nssltofd will run only on incremental mode, except the initial full update
+
+.br
+
+- if this value is > 0, every <RefreshPeriod.EveryNthFullUpdates>th update will be full updates, the rest will be incremental ones
+.br
+
+The most optimal mode is 3., so you can have incremental updates during the day for example and
+have a full update at the end of the day. Incremental updates are more efficient because it returns
+less entry and stresses your LDAP servers less (hopefully you have index for modifyTimestamp).
+ 
+If your LDAP server does not support modifyTimestamp (or if it supports but its disabled), then you
+can still run on 1., full update mode.
+ 
+I do not recommend on using 2., incrememntal only mode, because full update mode is necessary to 
+realize the deleted objects, incrememntal mode can only pick up modified and newly added objects.
+ 
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fBSkipZeroUpdates\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+It's a safety feature in case you are afraid of zeroing out your cache files by accident. This
+should never happen by accident, because if your LDAP server returns an error, nssltofd will skip
+the update phase. Still, if you want to be super-safe on not having a 0 byte cache file, just set
+this parameter to "yes". This will skip any updates which would result to have 0 entries.
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fBLog.Filename\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+Name of the log file.
+.RE
+
+.sp
+.ne 2
+.mk
+.na
+\fB\fBLog.LimitSize\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+Log file will not grow beyond this size in Kbytes, it will be
+auto-truncated.
+.sp
+.ne 2
+.mk
+.na
+\fB\fBLog.Level\fR\fR
+.ad
+.sp .6
+.RS 4n
+
+Log verbosity. Valid levels are 'none', 'low', and 'high'.
+.SH SEE ALSO
+.PP
+\fBissc\fR(1), \fBnssltofd\fR(1M)
+.PP
+.ce
+sendai, <andras.spitzer@ge.com>
+.SH FILES 
+/opt/ISSnssl2f/etc/nssl2f.conf
+.br
+/etc/passwd.cache
+.br
+/etc/shadow.cache
+.br
+/etc/group.cache
+.br
