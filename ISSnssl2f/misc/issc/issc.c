@@ -100,4 +100,3 @@ _nss_issc_shadow_constr(dummy1,dummy2,dummy3)
 
         return((nss_backend_t *)be);
 }
-
