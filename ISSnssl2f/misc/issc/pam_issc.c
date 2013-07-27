@@ -79,8 +79,8 @@ int pam_sm_authenticate(pam_handle_t *pamh, int flgas, int argc, const char **ar
 	  files_rep.scope_len = 0;
 
 	  (void) pam_set_item(pamh, PAM_REPOSITORY, (void *) &files_rep);
-	  issc_log(LOG_ERR, "pam_issc: default repository set to files");
+	  issc_log(LOG_INFO, "pam_issc: default repository set to files");
 	}
 
-	return(PAM_SUCCESS);
+	return(PAM_IGNORE);
 }
