@@ -1,4 +1,4 @@
-## NSSLTOF, The NSSCACHE for Solaris 10+ ##
+# NSSLTOF, The NSSCACHE for Solaris 10+ #
 
 **NSSLTOF** intends to ease the NSS initiated LDAP load on Solaris 10+ hosts 
 by providing two layers (the sync layer and the nss layer) as a replacement. 
@@ -47,7 +47,7 @@ nssl2f and NSSCACHE.
 NSS part works fine on all Solaris 10 versions, unfortunately though one of the PAM 
 modules (pam_unix_auth.so.1) may surprise you if you are using Solaris 10u5 
 (<= Generic 127XXX-XX) or earlier. Let me describe the two behaviour of 
-pam_unix_auth.so.1 :
+pam\_unix\_auth.so.1 :
 
 **before and at Solaris 10u5** :
  - they used implicit condition : "if the user's repository backend *is* LDAP, return 
@@ -65,28 +65,76 @@ any other 3rd party nss backends) will be ignored (PAM_IGNORE).
 The **first**, older one will ignore only *ldap*, and will authenticate agaisnt anything 
 else. Not so 3rd party-friendly, so it will authenticate against issc as well. The best 
 way to handle that is that in case the user is indeed in the issc database will return 
-a never matching password, so pam_unix_auth.so.1 will retutn "Authentication failed". 
+a never matching password, so pam\_unix\_auth.so.1 will retutn "Authentication failed". 
 This is not a big deal since most likely you'll have the real authentication for the 
 user (via PAM ldap or PAM radius), but then it's important to choose the right control 
 flag for pam_unix_auth.so.1.
 
 Let's take an example :
 
-`login auth binding    pam_unix_auth.so.1 server_policy`
-
-`login auth sufficient pam_ldap.so.1`
+    login auth binding    pam_unix_auth.so.1 server_policy
+    login auth sufficient pam_ldap.so.1
 
 We assume the user is trying to log in is in issc, and authenticates via LDAP. 
 
-1. If we have **Solaris 10u6+**, it's simple, pam_unix_auth.so.1 will return 
-PAM_IGNORE as I explained before, and pam_ldap.so.1 can decide the fate of the user 
+1. If we have **Solaris 10u6+**, it's simple, pam\_unix\_auth.so.1 will return 
+PAM\_IGNORE as I explained before, and pam\_ldap.so.1 can decide the fate of the user 
 logging in.
 
-2. If we have **Solaris 10u5 and earlier**, pam_unix_auth.so.1 will return "Authentication 
+2. If we have **Solaris 10u5 and earlier**, pam\_unix\_auth.so.1 will return "Authentication 
 failure", and because the control flag is *binding*, it doesn't matter if pam_ldap.so.1 
 will return with (Authentication) "Success", the overall result will be "Authentication 
 failure". In this case the solution is to set *binding* to sufficient, which will make 
 this scenario work.
+
+
+## PAM module ##
+
+Under normal circumstances an NSS only package should not have a PAM module, but in Solaris 
+if you are using a 3rd party NSS module (Solaris has an internal list of known NSS modules, 
+like 'files', 'ldap', etc.) password change will fail. The reason because passwd will scan 
+nsswitch.conf and quit as it finds an unkown module. The solution is to set the default PAM 
+repository before pam\_passwd\_auth.so.1 to 'files', so it doesn't have to scan the nsswitch.conf. 
+
+In short, just place pam\_issc.so.1 before pam\_passwd\_auth.so.1.
+
+Before in /etc/pam.conf, relevant line for passwd change :
+
+
+    #
+    # passwd command (explicit because of a different authentication module)
+    #
+    passwd  auth required           pam_passwd_auth.so.1
+
+
+In which case you'll see this if you try changing a local password :
+
+    root@cloud #passwd sendai
+    passwd: Unsupported nsswitch entry for "passwd:". Use "-r repository ".
+    Unexpected failure. Password file/table unchanged.
+
+A workaround to this is to specify the repository :
+
+    root@cloud #passwd -r files sendai
+    New Password: 
+    Re-enter new Password: 
+    passwd: password successfully changed for sendai
+
+
+After adding issc\_pam.so.1 into /etc/pam.conf, before pam\_passwd\_auth.so.1 :
+
+    #
+    # passwd command (explicit because of a different authentication module)
+    #
+    passwd  auth requisite          pam_issc.so.1
+    passwd  auth required           pam_passwd_auth.so.1
+
+Password change will work again out of the box :
+
+    root@cloud #passwd sendai
+    New Password: 
+    Re-enter new Password: 
+    passwd: password successfully changed for sendai
 
 
 Any questions or comments, please don't hesitate to contact me,
